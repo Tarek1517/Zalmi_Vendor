@@ -75,21 +75,21 @@ const currency_symbol = "$";
 
   <!-- Earnings Summary -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+    <div class="bg-green-100 rounded-xl shadow-sm p-6 border border-gray-100">
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm text-gray-500">Total Revenue</p>
-          <p class="text-2xl font-bold text-gray-900">
+          <p class="text-2xl font-bold text-green-900">
             {{ currency_symbol }}{{ vendor.total_revenue.toFixed(2) }}
           </p>
         </div>
-        <div class="p-3 bg-green-100 rounded-lg text-green-600">
+        <div class="p-3 bg-green-400 rounded-lg text-green-800">
           <Icon name="ph:currency-dollar" class="text-2xl" />
         </div>
       </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+    <div class="bg-amber-100 rounded-xl shadow-sm p-6 border border-gray-100">
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm text-gray-500">Pending Balance</p>
@@ -97,13 +97,13 @@ const currency_symbol = "$";
             {{ currency_symbol }}{{ vendor.pending_balance.toFixed(2) }}
           </p>
         </div>
-        <div class="p-3 bg-amber-100 rounded-lg text-amber-600">
+        <div class="p-3 bg-amber-400 rounded-lg text-amber-800">
           <Icon name="ph:clock" class="text-2xl" />
         </div>
       </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+    <div class="bg-blue-100 rounded-xl shadow-sm p-6 border border-gray-100">
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm text-gray-500">Pending Orders</p>
@@ -111,7 +111,7 @@ const currency_symbol = "$";
             {{ vendor.pending_orders }}
           </p>
         </div>
-        <div class="p-3 bg-blue-100 rounded-lg text-blue-600">
+        <div class="p-3 bg-blue-400 rounded-lg text-blue-800">
           <Icon name="ph:shopping-cart" class="text-2xl" />
         </div>
       </div>

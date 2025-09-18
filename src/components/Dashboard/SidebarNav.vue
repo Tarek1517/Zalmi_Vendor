@@ -74,6 +74,20 @@
         </router-link>
       </li>
 
+      <!-- Bank Account Settings -->
+      <li>
+        <router-link
+          to="/dashboard/bankDetails"
+          class="w-full px-5 py-4 text-left flex items-center gap-3 border-l-4"
+          :class="$route.path.startsWith('/dashboard/bankDetails') 
+            ? 'border-primary bg-primary/20 text-primary font-semibold' 
+            : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'"
+        >
+          <Icon name="pixel:bank-solid" class="text-lg" />
+          Bank Details
+        </router-link>
+      </li>
+
       <!-- Reviews -->
       <li>
         <router-link
