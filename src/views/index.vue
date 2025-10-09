@@ -1,3 +1,103 @@
+<script setup>
+import { ref, computed, watch } from "vue";
+import useAxios from "@/composables/useAxios";
+import { toast } from "vue3-toastify";
+import { useRouter } from "vue-router";
+const { loading, error, sendRequest } = useAxios();
+// State
+const activeTab = ref("login");
+const showDropdown = ref(false);
+
+const countries = [
+  { code: "US", name: "United States", dialCode: "+1" },
+  { code: "GB", name: "United Kingdom", dialCode: "+44" },
+  { code: "BD", name: "Bangladesh", dialCode: "+880" },
+  { code: "IN", name: "India", dialCode: "+91" },
+  { code: "CA", name: "Canada", dialCode: "+1" },
+  { code: "AU", name: "Australia", dialCode: "+61" },
+  { code: "DE", name: "Germany", dialCode: "+49" },
+  { code: "FR", name: "France", dialCode: "+33" },
+  { code: "JP", name: "Japan", dialCode: "+81" },
+  { code: "SG", name: "Singapore", dialCode: "+65" },
+];
+
+// Default country
+const selectedCountry = ref({
+  code: "BD",
+  name: "Bangladesh",
+  dialCode: "+880",
+});
+
+const rawPhoneNumber = ref("");
+
+const fullPhoneNumber = computed(() => {
+  const cleanedNumber = rawPhoneNumber.value.replace(/^(\+|\s)+/, "");
+  return `${selectedCountry.value.dialCode}${cleanedNumber}`;
+});
+
+const form = ref({
+  shopName: "",
+  vendorName: "",
+  licenseNumber: "",
+  nid: "",
+  email: "",
+  password: "",
+  termsAccepted: false,
+  documents: "",
+  phoneNumber: fullPhoneNumber.value,
+});
+
+const documentsPreview = ref(null);
+const isImage = ref(false);
+
+const handleDocuments = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert("File size must be less than 5MB");
+    return;
+  }
+
+  form.value.documents = file;
+
+  const fileType = file.type.toLowerCase();
+
+  if (fileType.startsWith("image/")) {
+    isImage.value = true;
+    documentsPreview.value = URL.createObjectURL(file);
+  } else {
+    isImage.value = false;
+    documentsPreview.value = null;
+  }
+};
+
+const selectCountry = (country) => {
+  selectedCountry.value = country;
+  showDropdown.value = false;
+};
+
+const onSubmit = async () => {
+  const response = await sendRequest({
+    method: "post",
+    url: "/register ",
+    data: form.value,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  if (response?.data) {
+    toast.success(`Profile Submitted Successfully`, { autoclose: 1000 });
+  }
+};
+
+watch([rawPhoneNumber, selectedCountry], () => {
+  const cleanedNumber = rawPhoneNumber.value.replace(/^(\+|\s)+/, "");
+  form.value.phoneNumber = `${selectedCountry.value.dialCode}${cleanedNumber}`;
+});
+</script>
+
 <template>
   <AppLayout>
     <div class="bg-gradient-to-br from-gray-50 to-gray-100">
@@ -44,7 +144,7 @@
             </button>
           </div>
         </div>
-
+        
         <!-- Tab Content -->
         <div class="max-w-5xl mx-auto">
           <!-- Login Tab -->
@@ -217,174 +317,215 @@
             class="bg-white rounded-xl shadow-lg overflow-hidden"
           >
             <div class="md:flex">
-              <div class="md:w-1/2 p-8">
+              <div class="md:w-1/2 p-8 space-y-4">
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">
                   Become a Seller
                 </h2>
-
-                <form class="space-y-5">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        for="shopName"
-                        class="block text-sm font-medium text-gray-700 mb-2"
-                        >Shop/Brand Name</label
-                      >
-                      <input
-                        id="shopName"
-                        type="text"
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
-                        placeholder="Your shop name"
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        for="registrantName"
-                        class="block text-sm font-medium text-gray-700 mb-2"
-                        >Your Name</label
-                      >
-                      <input
-                        id="registrantName"
-                        type="text"
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
-                        placeholder="Your full name"
-                      />
-                    </div>
-                  </div>
-
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        for="licenseNumber"
-                        class="block text-sm font-medium text-gray-700 mb-2"
-                        >License Number</label
-                      >
-                      <input
-                        id="licenseNumber"
-                        type="text"
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
-                        placeholder="Business license"
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        for="nid"
-                        class="block text-sm font-medium text-gray-700 mb-2"
-                        >NID Number</label
-                      >
-                      <input
-                        id="nid"
-                        type="text"
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
-                        placeholder="National ID"
-                      />
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        for="regEmail"
-                        class="block text-sm font-medium text-gray-700 mb-2"
-                        >Email</label
-                      >
-                      <input
-                        id="regEmail"
-                        type="email"
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
-                        placeholder="your@email.com"
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        for="password"
-                        class="block text-sm font-medium text-gray-700 mb-2"
-                        >Password</label
-                      >
-                      <input
-                        id="password"
-                        type="password"
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
-                        placeholder="••••••••"
-                      />
-                    </div>
-                  </div>
+               
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2"
-                      >Phone Number</label
+                    <label
+                      for="shopName"
+                      class="block text-sm font-medium text-gray-700 mb-2"
+                      >Shop/Brand Name</label
                     >
-                    <div class="flex gap-2">
-                      <div class="relative w-1/3">
-                        <button
-                          type="button"
-                          @click="showDropdown = !showDropdown"
-                          class="w-full px-3 py-3 rounded-lg border border-gray-300 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition"
-                        >
-                          <div class="flex items-center">
-                            <img
-                              src="https://flagcdn.com/w20/bd.png"
-                              srcset="https://flagcdn.com/w40/bd.png 2x"
-                              class="w-5 h-3.5 mr-2 object-cover"
-                              alt="BD"
-                            />
-                            <span class="text-sm">+880</span>
-                          </div>
-                          <svg
-                            class="h-4 w-4 ml-1 text-gray-500"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </svg>
-                        </button>
+                    <input
+                      id="shopName"
+                      v-model="form.shopName"
+                      type="text"
+                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      placeholder="Your shop name"
+                    />
+                  </div>
 
-                        <div
-                          v-if="showDropdown"
-                          class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto"
+                  <div>
+                    <label
+                      for="registrantName"
+                      class="block text-sm font-medium text-gray-700 mb-2"
+                      >Your Name</label
+                    >
+                    <input
+                      id="registrantName"
+                      v-model="form.vendorName"
+                      type="text"
+                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      placeholder="Your full name"
+                    />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      for="licenseNumber"
+                      class="block text-sm font-medium text-gray-700 mb-2"
+                      >License Number</label
+                    >
+                    <input
+                      id="licenseNumber"
+                      v-model="form.licenseNumber"
+                      type="text"
+                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      placeholder="Business license"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      for="nid"
+                      class="block text-sm font-medium text-gray-700 mb-2"
+                      >NID Number</label
+                    >
+                    <input
+                      id="nid"
+                      v-model="form.nid"
+                      type="text"
+                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      placeholder="National ID"
+                    />
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      for="regEmail"
+                      class="block text-sm font-medium text-gray-700 mb-2"
+                      >Email</label
+                    >
+                    <input
+                      id="email"
+                      v-model="form.email"
+                      type="email"
+                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      for="password"
+                      class="block text-sm font-medium text-gray-700 mb-2"
+                      >Password</label
+                    >
+                    <input
+                      id="password"
+                      v-model="form.password"
+                      type="password"
+                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+
+                  <div class="flex gap-2">
+                    <!-- Country Selector -->
+                    <div class="relative w-1/3">
+                      <button
+                        type="button"
+                        @click="showDropdown = !showDropdown"
+                        class="w-full px-3 py-3 rounded-lg border border-gray-300 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition"
+                      >
+                        <div class="flex items-center">
+                          <img
+                            :src="`https://flagcdn.com/w20/${selectedCountry.code.toLowerCase()}.png`"
+                            :srcset="`https://flagcdn.com/w40/${selectedCountry.code.toLowerCase()}.png 2x`"
+                            class="w-5 h-3.5 mr-2 object-cover"
+                            :alt="selectedCountry.code"
+                          />
+                          <span class="text-sm">{{
+                            selectedCountry.dialCode
+                          }}</span>
+                        </div>
+                        <svg
+                          class="h-4 w-4 ml-1 text-gray-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
                         >
-                          <div
-                            v-for="country in countries"
-                            :key="country.code"
-                            @click="selectCountry(country)"
-                            class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
-                          >
-                            <img
-                              :src="`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`"
-                              :srcset="`https://flagcdn.com/w40/${country.code.toLowerCase()}.png 2x`"
-                              class="w-5 h-3.5 mr-2 object-cover"
-                              :alt="country.code"
-                            />
-                            <span class="text-sm">
-                              {{ country.name }} ({{ country.dialCode }})
-                            </span>
-                          </div>
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+
+                      <!-- Dropdown -->
+                      <div
+                        v-if="showDropdown"
+                        class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto"
+                      >
+                        <div
+                          v-for="country in countries"
+                          :key="country.code"
+                          @click="selectCountry(country)"
+                          class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                        >
+                          <img
+                            :src="`https://flagcdn.com/w20/${country.code.toLowerCase()}.png`"
+                            :srcset="`https://flagcdn.com/w40/${country.code.toLowerCase()}.png 2x`"
+                            class="w-5 h-3.5 mr-2 object-cover"
+                            :alt="country.code"
+                          />
+                          <span class="text-sm">
+                            {{ country.name }} ({{ country.dialCode }})
+                          </span>
                         </div>
                       </div>
-
-                      <input
-                        type="tel"
-                        class="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
-                        placeholder="Phone number"
-                      />
                     </div>
-                  </div>
 
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2"
-                      >Business Documents</label
-                    >
-                    <label
-                      class="flex flex-col items-center justify-center w-full p-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
-                    >
-                      <div class="flex flex-col items-center justify-center">
+                    <!-- Phone Input -->
+                    <input
+                      v-model="rawPhoneNumber"
+                      type="tel"
+                      class="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      placeholder="Phone number"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Business Documents
+                  </label>
+
+                  <label
+                    class="flex flex-col items-center justify-center w-full p-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
+                  >
+                    <div class="flex flex-col items-center justify-center">
+                      <template v-if="form.documents">
+                        <!-- Image Preview -->
+                        <img
+                          v-if="isImage"
+                          :src="documentsPreview"
+                          class="h-32 w-32 object-contain mb-2"
+                          alt="Preview"
+                        />
+
+                        <!-- Document Placeholder -->
+                        <div
+                          v-else
+                          class="flex flex-col items-center text-gray-600 mb-2"
+                        >
+                          <Icon
+                            name="solar:file-download-bold-duotone"
+                            class="text-5xl text-primary mb-2"
+                          />
+                          <p
+                            class="text-sm text-gray-700 font-medium text-center"
+                          >
+                            {{ form.documents.name }}
+                          </p>
+                        </div>
+                      </template>
+
+                      <!-- Default Upload UI -->
+                      <template v-else>
                         <svg
                           class="h-8 w-8 text-gray-500 mb-2"
                           fill="none"
@@ -403,47 +544,57 @@
                           drag and drop
                         </p>
                         <p class="text-xs text-gray-500 mt-1">
-                          PDF, DOC, JPG, PNG (Max 5MB)
+                          PDF, DOC, DOCX, JPG, PNG (Max 5MB)
                         </p>
-                      </div>
-                      <input
-                        id="documents"
-                        type="file"
-                        class="hidden"
-                        multiple
-                      />
+                      </template>
+                    </div>
+
+                    <input
+                      id="documents"
+                      type="file"
+                      class="hidden"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      @change="handleDocuments"
+                    />
+                  </label>
+                </div>
+
+                <div class="flex items-start mt-4">
+                  <div class="flex items-center h-5">
+                    <input
+                      id="terms"
+                      v-model="form.termsAccepted"
+                      type="checkbox"
+                      class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div class="ml-3 text-sm">
+                    <label for="terms" class="font-medium text-gray-700">
+                      I agree to the
+                      <a href="/terms" class="text-primary hover:underline">
+                        Terms of Service
+                      </a>
+                      and
+                      <a href="/privacy" class="text-primary hover:underline">
+                        Privacy Policy
+                      </a>
                     </label>
                   </div>
+                </div>
 
-                  <div class="flex items-start">
-                    <div class="flex items-center h-5">
-                      <input
-                        id="terms"
-                        type="checkbox"
-                        class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div class="ml-3 text-sm">
-                      <label for="terms" class="font-medium text-gray-700">
-                        I agree to the
-                        <a href="/terms" class="text-primary hover:underline"
-                          >Terms of Service</a
-                        >
-                        and
-                        <a href="/privacy" class="text-primary hover:underline"
-                          >Privacy Policy</a
-                        >
-                      </label>
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    class="w-full bg-primary text-white font-medium py-3 px-4 rounded-lg transition shadow-md"
-                  >
-                    Apply Now
-                  </button>
-                </form>
+                <button
+                  @click="onSubmit"
+                  type="submit"
+                  :disabled="!form.termsAccepted"
+                  :class="[
+                    'w-full font-medium py-3 px-4 rounded-lg transition shadow-md',
+                    form.termsAccepted
+                      ? 'bg-primary cursor-pointer text-white hover:bg-primary/90'
+                      : 'bg-gray-300 cursor-not-allowed text-gray-600',
+                  ]"
+                >
+                  Apply Now
+                </button>
               </div>
 
               <div
@@ -741,36 +892,6 @@
     </div>
   </AppLayout>
 </template>
-
-<script setup>
-import { ref } from "vue";
-
-const activeTab = ref("login");
-const showDropdown = ref(false);
-const selectedCountry = ref({
-  code: "BD",
-  name: "Bangladesh",
-  dialCode: "+880",
-});
-
-const countries = [
-  { code: "US", name: "United States", dialCode: "+1" },
-  { code: "GB", name: "United Kingdom", dialCode: "+44" },
-  { code: "BD", name: "Bangladesh", dialCode: "+880" },
-  { code: "IN", name: "India", dialCode: "+91" },
-  { code: "CA", name: "Canada", dialCode: "+1" },
-  { code: "AU", name: "Australia", dialCode: "+61" },
-  { code: "DE", name: "Germany", dialCode: "+49" },
-  { code: "FR", name: "France", dialCode: "+33" },
-  { code: "JP", name: "Japan", dialCode: "+81" },
-  { code: "SG", name: "Singapore", dialCode: "+65" },
-];
-
-const selectCountry = (country) => {
-  selectedCountry.value = country;
-  showDropdown.value = false;
-};
-</script>
 
 <style>
 /* Smooth transitions for all interactive elements */
