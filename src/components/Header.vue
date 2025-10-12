@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-white/95 py-2 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+  <div
+    class="bg-white/95 py-2 backdrop-blur-sm border-b border-gray-100 shadow-sm"
+  >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <!-- Logo -->
@@ -10,7 +12,6 @@
               alt="Vendor Portal"
               class="h-8 w-auto transition-transform duration-200 hover:scale-105"
             />
-            
           </div>
         </div>
 
@@ -71,9 +72,7 @@
               >
                 <span class="text-primary font-semibold text-sm">A</span>
               </div>
-              <span class="hidden md:block text-gray-600"
-                >Vendor Account</span
-              >
+              <span class="hidden md:block text-gray-600">{{ authStore?.vendor?.shopName }}</span>
               <Icon name="ph:caret-down" class="text-lg text-gray-400" />
             </button>
           </div>
@@ -93,5 +92,7 @@
 </template>
 
 <script setup>
-// no script needed for static header
+import { useAuthStore } from "@/stores/useAuthStore.js";
+import { onMounted } from "vue";
+const authStore = useAuthStore();
 </script>

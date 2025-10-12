@@ -7,7 +7,7 @@ import { useRoute } from "vue-router";
 const route = useRoute();
 const routeKey = computed(() => route.path + "-" + JSON.stringify(route.query));
 
-import { useAuthStore } from "./stores/useAuthStore";
+import { useAuthStore } from "@/stores/useAuthStore.js";;
 import { onMounted } from "vue";
 const authStore = useAuthStore();
 onMounted(async () => {

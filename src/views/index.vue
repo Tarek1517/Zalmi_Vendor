@@ -2,8 +2,12 @@
 import { ref, computed, watch } from "vue";
 import useAxios from "@/composables/useAxios";
 import { toast } from "vue3-toastify";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 const { loading, error, sendRequest } = useAxios();
+const router = useRouter();
+const route = useRoute();
+import { useAuthStore } from "@/stores/useAuthStore.js";
+const authStore = useAuthStore();
 // State
 const activeTab = ref("login");
 const showDropdown = ref(false);
@@ -34,6 +38,30 @@ const fullPhoneNumber = computed(() => {
   const cleanedNumber = rawPhoneNumber.value.replace(/^(\+|\s)+/, "");
   return `${selectedCountry.value.dialCode}${cleanedNumber}`;
 });
+
+const credentials = ref({
+  email: "",
+  password: "",
+});
+
+const handleLogin = async () => {
+  try {
+    const response = await authStore.login(credentials.value);
+
+    if (response?.data) {
+      toast.success("Vendor login successful!", { autoClose: 800 });
+      setTimeout(() => {
+        router.push("/dashboard"); // redirect after login
+      }, 800);
+    }
+  } catch (err) {
+    console.error("Login failed:", err);
+    toast.error(
+      err?.response?.data?.message || "Invalid email or password",
+      { autoClose: 1500 }
+    );
+  }
+};
 
 const form = ref({
   shopName: "",
@@ -78,19 +106,36 @@ const selectCountry = (country) => {
 };
 
 const onSubmit = async () => {
-  const response = await sendRequest({
-    method: "post",
-    url: "/register ",
-    data: form.value,
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-
-  if (response?.data) {
-    toast.success(`Profile Submitted Successfully`, { autoclose: 1000 });
+  try {
+    const response = await authStore.register(form.value);
+    if (response?.data) {
+      toast.success("Profile Submitted Successfully", { autoClose: 1000 });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    }
+  } catch (error) {
+    toast.error(error?.response?.data?.message || "Registration failed");
   }
 };
+
+// const onSubmit = async () => {
+//   const response = await sendRequest({
+//     method: "post",
+//     url: "/register",
+//     data: form.value,
+//     headers: {
+//       "Content-Type": "multipart/form-data",
+//     },
+//   });
+
+//   if (response?.data) {
+//     toast.success("Profile Submitted Successfully", { autoclose: 1000 });
+//     setTimeout(() => {
+//       window.location.reload();
+//     }, 1000);
+//   }
+// };
 
 watch([rawPhoneNumber, selectedCountry], () => {
   const cleanedNumber = rawPhoneNumber.value.replace(/^(\+|\s)+/, "");
@@ -144,7 +189,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
             </button>
           </div>
         </div>
-        
+
         <!-- Tab Content -->
         <div class="max-w-5xl mx-auto">
           <!-- Login Tab -->
@@ -157,8 +202,8 @@ watch([rawPhoneNumber, selectedCountry], () => {
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">
                   Welcome Back
                 </h2>
-
-                <form class="space-y-5">
+              
+                <div class="space-y-5">
                   <div>
                     <label
                       for="email"
@@ -167,6 +212,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                     >
                     <input
                       id="email"
+                      v-model="credentials.email"
                       type="email"
                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
                       placeholder="your@email.com"
@@ -189,6 +235,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                     </div>
                     <input
                       id="password"
+                      v-model="credentials.password"
                       type="password"
                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
                       placeholder="••••••••"
@@ -210,12 +257,12 @@ watch([rawPhoneNumber, selectedCountry], () => {
                   </div>
 
                   <button
-                    type="submit"
+                    @click="handleLogin"
                     class="w-full bg-primary text-white font-medium py-3 px-4 rounded-lg transition shadow-md"
                   >
                     Sign In
                   </button>
-                </form>
+                </div>
 
                 <div class="mt-6">
                   <div class="relative">
@@ -294,18 +341,12 @@ watch([rawPhoneNumber, selectedCountry], () => {
                     Join our marketplace and start selling to millions of
                     customers
                   </p>
-                  <!-- <button
-                  @click="activeTab = 'register'"
-                  class="px-4 py-2 bg-white text-primary rounded-md font-medium hover:bg-gray-100 transition"
-                >
-                  Create Account
-                </button> -->
-                  <RouterLink
-                    to="/dashboard"
+                  <button
+                    @click="activeTab = 'register'"
                     class="px-4 py-2 bg-white text-primary rounded-md font-medium hover:bg-gray-100 transition"
                   >
-                    Seller Dashboard
-                  </RouterLink>
+                    Create Account
+                  </button>
                 </div>
               </div>
             </div>
@@ -321,7 +362,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">
                   Become a Seller
                 </h2>
-               
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label

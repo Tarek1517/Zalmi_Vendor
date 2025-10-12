@@ -1,5 +1,10 @@
 <script setup>
 import { ref } from "vue";
+
+import { useAuthStore } from "@/stores/useAuthStore.js";
+import { onMounted } from "vue";
+const authStore = useAuthStore();
+
 // Vendor data
 const vendor = ref({
   id: 1,
@@ -32,15 +37,16 @@ const currency_symbol = "$";
       >
         <Icon name="ph:storefront" class="text-3xl text-blue-600" />
       </div>
+     
       <div class="flex-1">
         <div
           class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
         >
           <div>
             <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">
-              {{ vendor.store_name }}
+              {{ authStore?.vendor?.shopName }}
             </h2>
-            <p class="text-gray-600 mb-2">Managed by {{ vendor.name }}</p>
+            <p class="text-gray-600 mb-2">Managed by {{ authStore?.vendor?.vendorName }}</p>
             <div class="flex flex-wrap items-center gap-3">
               <span
                 class="inline-flex items-center gap-2 bg-blue-50 text-blue-600 rounded-full px-3 py-1 text-sm font-medium"

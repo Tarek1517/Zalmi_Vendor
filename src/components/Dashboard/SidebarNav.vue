@@ -1,4 +1,7 @@
 <script setup>
+import { useAuthStore } from "@/stores/useAuthStore.js";
+import { onMounted } from "vue";
+const authStore = useAuthStore();
 </script>
 
 <template>
@@ -9,9 +12,11 @@
         <router-link
           to="/dashboard"
           class="w-full px-5 py-4 text-left flex items-center gap-3 border-l-4"
-          :class="$route.path === '/dashboard' 
-            ? 'border-primary bg-primary/20 text-primary font-semibold' 
-            : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'"
+          :class="
+            $route.path === '/dashboard'
+              ? 'border-primary bg-primary/20 text-primary font-semibold'
+              : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'
+          "
         >
           <Icon name="ph:gauge" class="text-lg" />
           Dashboard
@@ -23,9 +28,11 @@
         <router-link
           to="/dashboard/products"
           class="w-full px-5 py-4 text-left flex items-center gap-3 border-l-4"
-          :class="$route.path.startsWith('/dashboard/products') 
-            ? 'border-primary bg-primary/20 text-primary font-semibold' 
-            : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'"
+          :class="
+            $route.path.startsWith('/dashboard/products')
+              ? 'border-primary bg-primary/20 text-primary font-semibold'
+              : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'
+          "
         >
           <Icon name="ph:package" class="text-lg" />
           Products
@@ -37,9 +44,11 @@
         <router-link
           to="/dashboard/orders"
           class="w-full px-5 py-4 text-left flex items-center gap-3 border-l-4"
-          :class="$route.path.startsWith('/dashboard/orders') 
-            ? 'border-primary bg-primary/20 text-primary font-semibold' 
-            : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'"
+          :class="
+            $route.path.startsWith('/dashboard/orders')
+              ? 'border-primary bg-primary/20 text-primary font-semibold'
+              : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'
+          "
         >
           <Icon name="ph:shopping-cart" class="text-lg" />
           Orders
@@ -51,9 +60,11 @@
         <router-link
           to="/dashboard/earnings"
           class="w-full px-5 py-4 text-left flex items-center gap-3 border-l-4"
-          :class="$route.path.startsWith('/dashboard/earnings') 
-            ? 'border-primary bg-primary/20 text-primary font-semibold' 
-            : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'"
+          :class="
+            $route.path.startsWith('/dashboard/earnings')
+              ? 'border-primary bg-primary/20 text-primary font-semibold'
+              : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'
+          "
         >
           <Icon name="ph:currency-dollar" class="text-lg" />
           Earnings
@@ -65,9 +76,11 @@
         <router-link
           to="/dashboard/settings"
           class="w-full px-5 py-4 text-left flex items-center gap-3 border-l-4"
-          :class="$route.path.startsWith('/dashboard/settings') 
-            ? 'border-primary bg-primary/20 text-primary font-semibold' 
-            : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'"
+          :class="
+            $route.path.startsWith('/dashboard/settings')
+              ? 'border-primary bg-primary/20 text-primary font-semibold'
+              : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'
+          "
         >
           <Icon name="ph:storefront" class="text-lg" />
           Store Settings
@@ -79,9 +92,11 @@
         <router-link
           to="/dashboard/bankDetails"
           class="w-full px-5 py-4 text-left flex items-center gap-3 border-l-4"
-          :class="$route.path.startsWith('/dashboard/bankDetails') 
-            ? 'border-primary bg-primary/20 text-primary font-semibold' 
-            : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'"
+          :class="
+            $route.path.startsWith('/dashboard/bankDetails')
+              ? 'border-primary bg-primary/20 text-primary font-semibold'
+              : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'
+          "
         >
           <Icon name="pixel:bank-solid" class="text-lg" />
           Bank Details
@@ -93,15 +108,23 @@
         <router-link
           to="/dashboard/reviews"
           class="w-full px-5 py-4 text-left flex items-center gap-3 border-l-4"
-          :class="$route.path.startsWith('/dashboard/reviews') 
-            ? 'border-primary bg-primary/20 text-primary font-semibold' 
-            : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'"
+          :class="
+            $route.path.startsWith('/dashboard/reviews')
+              ? 'border-primary bg-primary/20 text-primary font-semibold'
+              : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'
+          "
         >
           <Icon name="ph:star" class="text-lg" />
           Reviews
         </router-link>
       </li>
+
+      <button
+        @click="authStore?.logout"
+        class="flex w-full px-5 py-4 text-left flex items-center gap-3 border-l-4"
+      >
+        <Icon name="ph:star" class="text-lg" />Log out
+      </button>
     </ul>
   </nav>
 </template>
-
