@@ -1,33 +1,39 @@
+// import '@/assets/css/app.css';
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 
 import App from "./App.vue";
 import router from "./router";
-import "vue3-toastify/dist/index.css";
-import AppLayout from "@/components/layouts/AppLayout.vue";
-import Icon from "@/components/Icon.vue";
-import Container from "@/components/Container.vue";
 import PrimeVue from "primevue/config";
 import Aura from "@primeuix/themes/aura";
 
+import "vue3-toastify/dist/index.css";
+import "summernote/dist/summernote-lite.css";
+import "summernote/dist/summernote-lite.min.js";
+
+// 🧠 Important: jQuery must be imported BEFORE vue3-summernote-editor
+import $ from "jquery";
+window.$ = window.jQuery = $;
+
+import "popper.js";
+import "summernote/dist/summernote-lite.js";
+import Vue3SummernoteEditor from "vue3-summernote-editor";
+
+import AppLayout from "@/components/layouts/AppLayout.vue";
+import Icon from "@/components/Icon.vue";
+import Container from "@/components/Container.vue";
+
 const app = createApp(App);
 
-// Global property
 app.config.globalProperties.$APP_URL = import.meta.env.VITE_APP_URL;
 
-// Plugins
 app.use(createPinia());
 app.use(router);
-app.use(PrimeVue, {
-  theme: {
-    preset: Aura,
-  },
-});
+app.use(PrimeVue, { theme: { preset: Aura } });
+app.use(Vue3SummernoteEditor);
 
-// Global components
 app.component("AppLayout", AppLayout);
 app.component("Icon", Icon);
 app.component("Container", Container);
 
-// Mount app
 app.mount("#app");

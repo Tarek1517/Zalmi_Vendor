@@ -2,25 +2,22 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import useAxios from "@/composables/useAxios";
 import { useRouter } from "vue-router";
-import axios from "axios";
+
 export const useAuthStore = defineStore("auth", () => {
   const router = useRouter();
   const vendor = ref(JSON.parse(localStorage.getItem("user")) ?? null);
   const isLoggedIn = computed(() => !!vendor.value);
+
   const { loading, error, sendRequest } = useAxios();
 
   // ===============================
   // 🔹 Fetch User
   // ===============================
   async function fetchUser() {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (!storedUser?.token) return; // Exit if no token
+
     try {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-
-      if (!storedUser?.token) {
-        await clearLocalStorage();
-        return;
-      }
-
       const response = await sendRequest({
         method: "GET",
         url: "/vendor/user",
@@ -31,12 +28,15 @@ export const useAuthStore = defineStore("auth", () => {
 
       if (response?.data) {
         vendor.value = response.data;
-      } else {
-        await clearLocalStorage();
       }
     } catch (err) {
-      console.error("Error fetching user:", err);
-      await clearLocalStorage();
+      console.error("Fetch user error:", err);
+      // Only clear storage if 401 (unauthorized)
+      if (err.response?.status === 401) {
+        await clearLocalStorage();
+        vendor.value = null;
+        router.push({ name: "Login" });
+      }
     }
   }
 
@@ -45,8 +45,6 @@ export const useAuthStore = defineStore("auth", () => {
   // ===============================
   async function login(credentials) {
     try {
-      await axios.get(import.meta.env.VITE_APP_URL + "/sanctum/csrf-cookie");
-
       const loginResponse = await sendRequest({
         method: "POST",
         url: "/login",
@@ -60,7 +58,7 @@ export const useAuthStore = defineStore("auth", () => {
       }
     } catch (err) {
       console.error("Login error:", err);
-      throw err;
+      throw err; // Rethrow so component can handle
     }
   }
 
@@ -70,14 +68,12 @@ export const useAuthStore = defineStore("auth", () => {
   async function register(signupData) {
     try {
       const formData = new FormData();
-
       for (const key in signupData) {
         if (signupData[key] != null) {
-          // Handle multiple files under 'documents'
           if (key === "documents" && Array.isArray(signupData[key])) {
-            signupData[key].forEach((file) => {
-              formData.append("documents[]", file);
-            });
+            signupData[key].forEach((file) =>
+              formData.append("documents[]", file)
+            );
           } else {
             formData.append(key, signupData[key]);
           }
@@ -88,9 +84,7 @@ export const useAuthStore = defineStore("auth", () => {
         method: "POST",
         url: "/register",
         data: formData,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       if (signupResponse?.data) {
@@ -112,6 +106,7 @@ export const useAuthStore = defineStore("auth", () => {
       await sendRequest({
         url: "/logout",
         method: "GET",
+        headers: { Authorization: `Bearer ${getToken()}` },
       });
     } catch (err) {
       console.warn("Logout request failed — proceeding to clear session.");
@@ -141,7 +136,6 @@ export const useAuthStore = defineStore("auth", () => {
   // 🔹 Expose to components
   // ===============================
   return {
-   
     vendor,
     isLoggedIn,
     login,

@@ -82,8 +82,8 @@ const authStore = useAuthStore();
               : 'border-transparent text-gray-700 hover:bg-gray-50 font-medium'
           "
         >
-          <Icon name="ph:storefront" class="text-lg" />
-          Store Settings
+          <Icon name="ic:outline-settings" class="text-lg" />
+          Settings
         </router-link>
       </li>
 
@@ -118,13 +118,6 @@ const authStore = useAuthStore();
           Reviews
         </router-link>
       </li>
-
-      <button
-        @click="authStore?.logout"
-        class="flex w-full px-5 py-4 text-left flex items-center gap-3 border-l-4"
-      >
-        <Icon name="ph:star" class="text-lg" />Log out
-      </button>
     </ul>
   </nav>
 </template>
