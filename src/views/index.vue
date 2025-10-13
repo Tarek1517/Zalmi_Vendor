@@ -51,11 +51,11 @@ const handleLogin = async () => {
     if (response?.data) {
       toast.success("Vendor login successful!", { autoClose: 800 });
       setTimeout(() => {
-        router.push("/dashboard"); // redirect after login
+        router.push("/dashboard");
       }, 800);
     }
   } catch (err) {
-    console.error("Login failed:", err);
+   
     toast.error(
       err?.response?.data?.message || "Invalid email or password",
       { autoClose: 1500 }
@@ -64,7 +64,6 @@ const handleLogin = async () => {
 };
 
 const form = ref({
-  shopName: "",
   vendorName: "",
   licenseNumber: "",
   nid: "",
@@ -119,23 +118,6 @@ const onSubmit = async () => {
   }
 };
 
-// const onSubmit = async () => {
-//   const response = await sendRequest({
-//     method: "post",
-//     url: "/register",
-//     data: form.value,
-//     headers: {
-//       "Content-Type": "multipart/form-data",
-//     },
-//   });
-
-//   if (response?.data) {
-//     toast.success("Profile Submitted Successfully", { autoclose: 1000 });
-//     setTimeout(() => {
-//       window.location.reload();
-//     }, 1000);
-//   }
-// };
 
 watch([rawPhoneNumber, selectedCountry], () => {
   const cleanedNumber = rawPhoneNumber.value.replace(/^(\+|\s)+/, "");
@@ -214,7 +196,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                       id="email"
                       v-model="credentials.email"
                       type="email"
-                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      class="w-full px-4 py-3 rounded-lg border border-primary/25 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
                       placeholder="your@email.com"
                     />
                   </div>
@@ -237,7 +219,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                       id="password"
                       v-model="credentials.password"
                       type="password"
-                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      class="w-full px-4 py-3 rounded-lg border border-primary/25 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
                       placeholder="••••••••"
                     />
                   </div>
@@ -363,22 +345,8 @@ watch([rawPhoneNumber, selectedCountry], () => {
                   Become a Seller
                 </h2>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      for="shopName"
-                      class="block text-sm font-medium text-gray-700 mb-2"
-                      >Shop/Brand Name</label
-                    >
-                    <input
-                      id="shopName"
-                      v-model="form.shopName"
-                      type="text"
-                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
-                      placeholder="Your shop name"
-                    />
-                  </div>
-
+                <div class="grid grid-cols-1 gap-4">
+                  
                   <div>
                     <label
                       for="registrantName"
@@ -389,7 +357,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                       id="registrantName"
                       v-model="form.vendorName"
                       type="text"
-                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      class="w-full px-4 py-3 rounded-lg border border-primary/25 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
                       placeholder="Your full name"
                     />
                   </div>
@@ -406,7 +374,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                       id="licenseNumber"
                       v-model="form.licenseNumber"
                       type="text"
-                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      class="w-full px-4 py-3 rounded-lg border border-primary/25 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
                       placeholder="Business license"
                     />
                   </div>
@@ -421,7 +389,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                       id="nid"
                       v-model="form.nid"
                       type="text"
-                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      class="w-full px-4 py-3 rounded-lg border border-primary/25 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
                       placeholder="National ID"
                     />
                   </div>
@@ -437,7 +405,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                       id="email"
                       v-model="form.email"
                       type="email"
-                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      class="w-full px-4 py-3 rounded-lg border border-primary/25 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
                       placeholder="your@email.com"
                     />
                   </div>
@@ -452,7 +420,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                       id="password"
                       v-model="form.password"
                       type="password"
-                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      class="w-full px-4 py-3 rounded-lg border border-primary/25 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
                       placeholder="••••••••"
                     />
                   </div>
@@ -468,7 +436,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                       <button
                         type="button"
                         @click="showDropdown = !showDropdown"
-                        class="w-full px-3 py-3 rounded-lg border border-gray-300 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition"
+                        class="w-full px-3 py-3 rounded-lg border border-primary/25 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition"
                       >
                         <div class="flex items-center">
                           <img
@@ -499,7 +467,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                       <!-- Dropdown -->
                       <div
                         v-if="showDropdown"
-                        class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto"
+                        class="absolute z-10 mt-1 w-full bg-white border border-primary/25 rounded-lg shadow-lg max-h-60 overflow-auto"
                       >
                         <div
                           v-for="country in countries"
@@ -524,7 +492,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                     <input
                       v-model="rawPhoneNumber"
                       type="tel"
-                      class="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
+                      class="flex-1 px-4 py-3 rounded-lg border border-primary/25 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition placeholder-gray-400"
                       placeholder="Phone number"
                     />
                   </div>
@@ -536,7 +504,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                   </label>
 
                   <label
-                    class="flex flex-col items-center justify-center w-full p-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
+                    class="flex flex-col items-center justify-center w-full p-6 border-2 border-primary/25 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
                   >
                     <div class="flex flex-col items-center justify-center">
                       <template v-if="form.documents">
@@ -606,7 +574,7 @@ watch([rawPhoneNumber, selectedCountry], () => {
                       id="terms"
                       v-model="form.termsAccepted"
                       type="checkbox"
-                      class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      class="w-4 h-4 rounded border-primary/25 text-blue-600 focus:ring-blue-500"
                     />
                   </div>
                   <div class="ml-3 text-sm">

@@ -1,16 +1,20 @@
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import SummernoteEditor from "vue3-summernote-editor";
 import useAxios from "@/composables/useAxios.js";
-const { loading, error, sendRequest } = useAxios();
 import { toast } from "vue3-toastify";
 import { useAuthStore } from "@/stores/useAuthStore.js";
-import { param } from "jquery";
+
+const { loading, error, sendRequest } = useAxios();
 const authStore = useAuthStore();
 
-// -------------------------
-// Dropdown / Country Setup
-// -------------------------
+const tabs = [
+  { id: "profile", name: "Profile Information" },
+  { id: "password", name: "Change Password" },
+  { id: "store", name: "Store Settings" },
+];
+const activeTab = ref("profile");
+
 const showDropdown = ref(false);
 const countries = [
   { code: "US", name: "United States", dialCode: "+1" },
@@ -30,10 +34,8 @@ const selectedCountry = ref({
   name: "Bangladesh",
   dialCode: "+880",
 });
-
 const rawPhoneNumber = ref("");
 
-// Full phone number including dial code
 const fullPhoneNumber = computed({
   get() {
     const cleaned = rawPhoneNumber.value.replace(/^(\+|\s)+/, "");
@@ -41,23 +43,17 @@ const fullPhoneNumber = computed({
   },
   set(value) {
     const code = selectedCountry.value.dialCode;
-    if (value.startsWith(code)) {
-      rawPhoneNumber.value = value.slice(code.length);
-    } else {
-      rawPhoneNumber.value = value;
-    }
+    rawPhoneNumber.value = value.startsWith(code)
+      ? value.slice(code.length)
+      : value;
   },
 });
 
-// Select a country
 const selectCountry = (country) => {
   selectedCountry.value = country;
   showDropdown.value = false;
 };
 
-// -------------------------
-// Form data
-// -------------------------
 const form = ref({
   shopName: null,
   vendor_type: null,
@@ -68,7 +64,6 @@ const form = ref({
   licenseNumber: null,
   type: null,
   order_number: null,
-  store_url: null,
   description: "",
   short_description: "",
   new_password: "",
@@ -79,10 +74,8 @@ const form = ref({
   cvrimage: null,
 });
 
-// File refs
 const profileImg = ref(null);
 const coverImg = ref(null);
-const documentsFile = ref(null);
 
 const fetchVendor = async () => {
   try {
@@ -94,14 +87,24 @@ const fetchVendor = async () => {
     const data = response.data?.data;
     if (!data) return;
 
-    // Update form with fetched data
     Object.keys(form.value).forEach((key) => {
-      if (data[key] !== undefined) {
-        form.value[key] = data[key];
-      }
+      if (data[key] !== undefined) form.value[key] = data[key];
     });
 
-    // Handle phone number
+    if (data.shops && data.shops.length > 0) {
+      const shop = data.shops[0];
+
+      form.value.shopName = shop.shopName ?? null;
+      form.value.vendor_type = shop.vendor_type ?? null;
+      form.value.short_description = shop.short_description ?? "";
+      form.value.description = shop.description ?? "";
+      form.value.order_number = shop.order_number ?? null;
+      form.value.type = shop.type ?? null;
+
+      profileImg.value = shop.image_url ?? null;
+      coverImg.value = shop.cvrimage_url ?? null;
+    }
+
     if (data.phoneNumber) {
       const matchedCountry = countries.find((c) =>
         data.phoneNumber.startsWith(c.dialCode)
@@ -116,18 +119,13 @@ const fetchVendor = async () => {
         rawPhoneNumber.value = data.phoneNumber;
       }
     }
-  } catch (error) {
-    console.error("Error fetching vendor:", error);
+  } catch (err) {
+    console.error("Error fetching vendor:", err);
   }
 };
 
-onMounted(() => {
-  fetchVendor();
-});
+onMounted(fetchVendor);
 
-// -------------------------
-// File uploads
-// -------------------------
 const onFileChange = (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -148,71 +146,89 @@ const handleDocuments = (event) => {
   form.value.documents = file;
 };
 
-// -------------------------
-// Watchers
-// -------------------------
 watch([rawPhoneNumber, selectedCountry], () => {
   const cleaned = rawPhoneNumber.value.replace(/^(\+|\s)+/, "");
   form.value.phoneNumber = `${selectedCountry.value.dialCode}${cleaned}`;
 });
 
-// -------------------------
-// Form submission - FIXED
-// -------------------------
 const onSubmit = async () => {
   try {
-    // Create FormData object
     const formData = new FormData();
 
-    // Append all form fields
     Object.keys(form.value).forEach((key) => {
       if (form.value[key] !== null && form.value[key] !== undefined) {
-        // For file fields, append the file directly
-        if (key === "image" || key === "cvrimage" || key === "documents") {
-          if (form.value[key] instanceof File) {
-            formData.append(key, form.value[key]);
-          }
+        if (
+          ["image", "cvrimage", "documents"].includes(key) &&
+          form.value[key] instanceof File
+        ) {
+          formData.append(key, form.value[key]);
         } else {
-          // For other fields, convert to string
           formData.append(key, String(form.value[key]));
         }
       }
     });
 
-    // Debug: Check what's being sent
-    console.log("Sending form data:");
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
-
     const response = await sendRequest({
       method: "post",
-      params: {
-        _method: "put",
-      },
       url: `/v1/vendor/${authStore?.vendor?.id}`,
+      params: { _method: "PUT" },
       data: formData,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { "Content-Type": "multipart/form-data" },
     });
 
     if (response?.data) {
-      toast.success("Profile Submitted Successfully", { autoclose: 1000 });
-      console.log("Response:", response.data);
+      toast.success("Profile updated successfully", {
+        autoclose: 1000,
+        theme: "dark",
+      });
+      fetchVendor();
     }
-  } catch (error) {
-    console.error("Submission error:", error);
+  } catch (err) {
+    console.error("Submission error:", err);
     toast.error("Failed to update profile");
   }
 };
+
+onUnmounted(() => {
+  if (profileImg.value && profileImg.value.startsWith("blob:")) {
+    URL.revokeObjectURL(profileImg.value);
+  }
+  if (coverImg.value && coverImg.value.startsWith("blob:")) {
+    URL.revokeObjectURL(coverImg.value);
+  }
+});
 </script>
 
 <template>
   <div>
-    <h2 class="text-2xl font-bold text-primary">Profile Settings</h2>
-    {{ form }}
-    <div class="bg-white rounded-xl overflow-hidden mb-12">
+    <h2 class="text-2xl font-bold text-primary mb-6">Vendor Settings</h2>
+
+    <!-- Tabs Navigation -->
+    <div class="bg-white rounded-xl shadow-sm mb-6">
+      <div class="border-b border-gray-200">
+        <nav class="flex space-x-8 px-6">
+          <button
+            v-for="tab in tabs"
+            :key="tab.id"
+            @click="activeTab = tab.id"
+            :class="[
+              'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+              activeTab === tab.id
+                ? 'border-primary text-primary'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+            ]"
+          >
+            {{ tab.name }}
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Profile Information Tab -->
+    <div
+      v-if="activeTab === 'profile'"
+      class="bg-white rounded-xl shadow-sm overflow-hidden mb-6"
+    >
       <div class="p-5 border-b border-gray-100">
         <h3 class="font-semibold text-gray-900">Profile Information</h3>
         <p class="text-sm text-gray-500">Update your Profile details</p>
@@ -235,13 +251,11 @@ const onSubmit = async () => {
             <label class="block text-sm font-medium text-gray-700"
               >License Number</label
             >
-            <div class="flex rounded-lg">
-              <input
-                type="text"
-                v-model="form.licenseNumber"
-                class="flex-1 block w-full px-3 py-2.5 rounded-r-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
-              />
-            </div>
+            <input
+              type="text"
+              v-model="form.licenseNumber"
+              class="block w-full px-4 py-2.5 rounded-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+            />
           </div>
         </div>
 
@@ -259,24 +273,20 @@ const onSubmit = async () => {
 
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">Email</label>
-            <div class="flex rounded-lg">
-              <input
-                type="text"
-                v-model="form.email"
-                class="flex-1 block w-full px-3 py-2.5 rounded-r-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
-              />
-            </div>
+            <input
+              type="text"
+              v-model="form.email"
+              class="block w-full px-4 py-2.5 rounded-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+            />
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700">
-              Phone Number
-            </label>
-
+            <label class="block text-sm font-medium text-gray-700"
+              >Phone Number</label
+            >
             <div class="flex gap-2">
-              <!-- Country Selector -->
               <div class="relative w-1/3">
                 <button
                   type="button"
@@ -307,7 +317,6 @@ const onSubmit = async () => {
                   </svg>
                 </button>
 
-                <!-- Dropdown -->
                 <div
                   v-if="showDropdown"
                   class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto"
@@ -324,14 +333,13 @@ const onSubmit = async () => {
                       class="w-5 h-3.5 mr-2 object-cover"
                       :alt="country.code"
                     />
-                    <span class="text-sm">
-                      {{ country.name }} ({{ country.dialCode }})
-                    </span>
+                    <span class="text-sm"
+                      >{{ country.name }} ({{ country.dialCode }})</span
+                    >
                   </div>
                 </div>
               </div>
 
-              <!-- Phone Input -->
               <input
                 v-model="rawPhoneNumber"
                 type="tel"
@@ -344,39 +352,25 @@ const onSubmit = async () => {
 
         <div class="grid grid-cols-1 gap-5">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Business Documents
-            </label>
-
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Business Documents</label
+            >
             <label
               class="flex flex-col items-center justify-center w-full p-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
             >
               <div class="flex flex-col items-center justify-center">
                 <template v-if="form.documents">
-                  <!-- Image Preview -->
-                  <img
-                    v-if="isImage"
-                    :src="documentsPreview"
-                    class="h-32 w-32 object-contain mb-2"
-                    alt="Preview"
-                  />
-
-                  <!-- Document Placeholder -->
-                  <div
-                    v-else
-                    class="flex flex-col items-center text-gray-600 mb-2"
-                  >
+                  <div class="flex flex-col items-center text-gray-600 mb-2">
                     <Icon
                       name="solar:file-download-bold-duotone"
                       class="text-5xl text-primary mb-2"
                     />
                     <p class="text-sm text-gray-700 font-medium text-center">
-                      {{ form.documents }}
+                      {{ form.documents.name }}
                     </p>
                   </div>
                 </template>
 
-                <!-- Default Upload UI -->
                 <template v-else>
                   <svg
                     class="h-8 w-8 text-gray-500 mb-2"
@@ -412,18 +406,26 @@ const onSubmit = async () => {
           </div>
         </div>
       </div>
-      <div class="p-5 space-y-5">
-        <div class="p-5 border-b border-gray-100">
-          <h3 class="font-semibold text-gray-900">Change Password</h3>
-        </div>
+    </div>
 
+    <!-- Change Password Tab -->
+    <div
+      v-if="activeTab === 'password'"
+      class="bg-white rounded-xl shadow-sm overflow-hidden mb-6"
+    >
+      <div class="p-5 border-b border-gray-100">
+        <h3 class="font-semibold text-gray-900">Change Password</h3>
+        <p class="text-sm text-gray-500">Update your password</p>
+      </div>
+
+      <div class="p-5 space-y-5">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700"
               >Old Password</label
             >
             <input
-              type="text"
+              type="password"
               v-model="form.old_password"
               class="block w-full px-4 py-2.5 rounded-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
             />
@@ -433,7 +435,7 @@ const onSubmit = async () => {
               >New Password</label
             >
             <input
-              type="text"
+              type="password"
               v-model="form.new_password"
               class="block w-full px-4 py-2.5 rounded-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
             />
@@ -443,20 +445,21 @@ const onSubmit = async () => {
             <label class="block text-sm font-medium text-gray-700"
               >Confirm Password</label
             >
-            <div class="flex rounded-lg">
-              <input
-                type="text"
-                v-model="form.confirm_password"
-                class="flex-1 block w-full px-3 py-2.5 rounded-r-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
-              />
-            </div>
+            <input
+              type="password"
+              v-model="form.confirm_password"
+              class="block w-full px-4 py-2.5 rounded-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+            />
           </div>
         </div>
       </div>
     </div>
 
-    <h2 class="text-2xl font-bold text-primary">Store Settings</h2>
-    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <!-- Store Settings Tab -->
+    <div
+      v-if="activeTab === 'store'"
+      class="bg-white rounded-xl shadow-sm overflow-hidden mb-6"
+    >
       <div class="p-5 border-b border-gray-100">
         <h3 class="font-semibold text-gray-900">Store Information</h3>
         <p class="text-sm text-gray-500">
@@ -479,123 +482,13 @@ const onSubmit = async () => {
 
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700"
-              >Store URL</label
+              >Order Number</label
             >
-            <div class="flex rounded-lg">
-              <span
-                class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-primary/25 bg-gray-50 text-gray-500 text-sm"
-              >
-                <Icon
-                  name="material-symbols:globe-asia"
-                  class="text-2xl text-primary"
-                />
-              </span>
-              <input
-                type="text"
-                v-model="form.store_url"
-                class="flex-1 block w-full px-3 py-2.5 rounded-r-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-1">
-          <label class="block text-sm font-medium text-gray-700"
-            >Store Description</label
-          >
-          <textarea
-            rows="4"
-            v-model="form.short_description"
-            class="block w-full px-4 py-2.5 rounded-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
-            placeholder="Describe your store for customers"
-          ></textarea>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Profile Image - 1/3 width -->
-          <div class="space-y-2 lg:col-span-1">
-            <label class="flex items-center text-sm font-medium text-gray-700">
-              <Icon
-                name="mdi:camera-outline"
-                class="w-4 h-4 mr-2 text-primary"
-              />
-              Shop Image <span class="text-red-500 ml-1">*</span>
-            </label>
-            <label
-              for="profile_image"
-              class="block w-auto aspect-square max-h-64 flex items-center justify-center p-4 border-2 border-dashed border-primary/30 rounded-full text-primary cursor-pointer bg-gradient-to-br from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-300 group overflow-hidden"
-            >
-              <input
-                type="file"
-                id="profile_image"
-                hidden
-                @change="onFileChange"
-              />
-              <div v-if="!profileImg" class="text-center">
-                <Icon
-                  name="mdi:cloud-upload-outline"
-                  class="w-8 h-8 mx-auto mb-2 text-primary group-hover:scale-110 transition-transform duration-300"
-                />
-                <p class="text-sm font-medium text-gray-700">Upload Image</p>
-                <p class="text-xs text-gray-500 mt-1">PNG, JPG, WEBP</p>
-              </div>
-              <div v-else class="relative w-full h-full">
-                <img
-                  :src="profileImg"
-                  class="w-full h-full object-cover rounded-full shadow-md"
-                />
-                <div
-                  class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full flex items-center justify-center"
-                >
-                  <Icon name="mdi:camera-plus" class="w-8 h-8 text-white" />
-                </div>
-              </div>
-            </label>
-          </div>
-
-          <!-- Cover Image - 2/3 width -->
-          <div class="space-y-2 lg:col-span-2">
-            <label class="flex items-center text-sm font-medium text-gray-700">
-              <Icon
-                name="mdi:image-outline"
-                class="w-4 h-4 mr-2 text-primary"
-              />
-              Cover Image <span class="text-red-500 ml-1">*</span>
-            </label>
-            <label
-              for="cover_image"
-              class="block w-full h-64 flex items-center justify-center gap-3 p-4 border-2 border-dashed border-primary/30 rounded-xl text-primary cursor-pointer bg-gradient-to-br from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-300 group"
-            >
-              <input
-                type="file"
-                id="cover_image"
-                hidden
-                @change="onCoverFileChange"
-              />
-              <div v-if="!coverImg" class="text-center">
-                <Icon
-                  name="mdi:cloud-upload-outline"
-                  class="w-8 h-8 mx-auto mb-2 text-primary group-hover:scale-110 transition-transform duration-300"
-                />
-                <p class="text-sm font-medium text-gray-700">
-                  Upload Cover Photo
-                </p>
-                <p class="text-xs text-gray-500 mt-1">
-                  PNG, JPG, WEBP up to 5MB
-                </p>
-              </div>
-              <div v-else class="relative w-full h-full">
-                <img
-                  :src="coverImg"
-                  class="w-full h-full object-cover rounded-lg shadow-md"
-                />
-                <div
-                  class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center"
-                >
-                  <Icon name="mdi:camera-plus" class="w-8 h-8 text-white" />
-                </div>
-              </div>
-            </label>
+            <input
+              type="number"
+              v-model="form.order_number"
+              class="block w-full px-4 py-2.5 rounded-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+            />
           </div>
         </div>
 
@@ -625,16 +518,103 @@ const onSubmit = async () => {
           </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-5">
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700"
-              >Order Number</label
+        <div class="space-y-1">
+          <label class="block text-sm font-medium text-gray-700"
+            >Store Description</label
+          >
+          <textarea
+            rows="4"
+            v-model="form.short_description"
+            class="block w-full px-4 py-2.5 rounded-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
+            placeholder="Describe your store for customers"
+          ></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="space-y-2 lg:col-span-1">
+            <label class="flex items-center text-sm font-medium text-gray-700">
+              <Icon
+                name="mdi:camera-outline"
+                class="w-4 h-4 mr-2 text-primary"
+              />
+              Shop Image <span class="text-red-500 ml-1">*</span>
+            </label>
+            <label
+              for="profile_image"
+              class="block w-auto aspect-square max-h-64 flex items-center justify-center p-4 border-2 border-dashed border-primary/30 rounded-full text-primary cursor-pointer bg-gradient-to-br from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-300 group overflow-hidden"
             >
-            <input
-              type="number"
-              v-model="form.order_number"
-              class="block w-full px-4 py-2.5 rounded-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
-            />
+              <input
+                type="file"
+                id="profile_image"
+                hidden
+                accept="image/*"
+                @change="onFileChange"
+              />
+              <div v-if="!profileImg" class="text-center">
+                <Icon
+                  name="mdi:cloud-upload-outline"
+                  class="w-8 h-8 mx-auto mb-2 text-primary group-hover:scale-110 transition-transform duration-300"
+                />
+                <p class="text-sm font-medium text-gray-700">Upload Image</p>
+                <p class="text-xs text-gray-500 mt-1">PNG, JPG, WEBP</p>
+              </div>
+              <div v-else class="relative w-full h-full">
+                <img
+                  :src="profileImg"
+                  class="w-full h-full object-cover rounded-full shadow-md"
+                />
+                <div
+                  class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full flex items-center justify-center"
+                >
+                  <Icon name="mdi:camera-plus" class="w-8 h-8 text-white" />
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div class="space-y-2 lg:col-span-2">
+            <label class="flex items-center text-sm font-medium text-gray-700">
+              <Icon
+                name="mdi:image-outline"
+                class="w-4 h-4 mr-2 text-primary"
+              />
+              Cover Image <span class="text-red-500 ml-1">*</span>
+            </label>
+            <label
+              for="cover_image"
+              class="block w-full h-64 flex items-center justify-center gap-3 p-4 border-2 border-dashed border-primary/30 rounded-xl text-primary cursor-pointer bg-gradient-to-br from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-300 group"
+            >
+              <input
+                type="file"
+                id="cover_image"
+                hidden
+                accept="image/*"
+                @change="onCoverFileChange"
+              />
+              <div v-if="!coverImg" class="text-center">
+                <Icon
+                  name="mdi:cloud-upload-outline"
+                  class="w-8 h-8 mx-auto mb-2 text-primary group-hover:scale-110 transition-transform duration-300"
+                />
+                <p class="text-sm font-medium text-gray-700">
+                  Upload Cover Photo
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                  PNG, JPG, WEBP up to 5MB
+                </p>
+              </div>
+              <div v-else class="relative w-full h-full">
+                <img
+                  :src="coverImg"
+                  class="w-full h-full object-cover rounded-lg shadow-md"
+                />
+                <div
+                  class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center"
+                >
+                  <Icon name="mdi:camera-plus" class="w-8 h-8 text-white" />
+                </div>
+              </div>
+            </label>
           </div>
         </div>
 
@@ -646,16 +626,17 @@ const onSubmit = async () => {
             <SummernoteEditor v-model="form.description" />
           </div>
         </div>
-
-        <div class="pt-5 flex justify-end">
-          <button
-            @click="onSubmit"
-            class="px-6 py-3 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-colors"
-          >
-            Save Changes
-          </button>
-        </div>
       </div>
+    </div>
+
+    <!-- Save Button -->
+    <div class="flex justify-end">
+      <button
+        @click="onSubmit"
+        class="px-6 py-3 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-colors"
+      >
+        Save Changes
+      </button>
     </div>
   </div>
 </template>

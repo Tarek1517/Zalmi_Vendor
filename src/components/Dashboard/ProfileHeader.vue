@@ -13,9 +13,21 @@ const fetchVendor = async () => {
       method: "get",
       url: `/v1/vendor/${authStore?.vendor?.id}`,
     });
-    vendorDetails.value = response?.data?.data || [];
+
+    const data = response?.data?.data;
+    if (!data) return;
+
+    // Normalize URLs
+    vendorDetails.value = {
+      ...data,
+      shops: data.shops?.map((shop) => ({
+        ...shop,
+        image_url: shop.image_url?.replace(/\\/g, "/"),
+        cvrimage_url: shop.cvrimage_url?.replace(/\\/g, "/"),
+      })),
+    };
   } catch (error) {
-    console.error("Error fetching Blogs:", error);
+    console.error("Error fetching vendor:", error);
   }
 };
 
@@ -52,7 +64,11 @@ const currency_symbol = "$";
       <div
         class="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-white shadow-md bg-blue-100 flex items-center justify-center"
       >
-        <Icon name="ph:storefront" class="text-3xl text-blue-600" />
+        <img
+          :src="vendorDetails?.shops?.[0]?.image_url"
+          alt="Shop Image"
+          class="w-full h-full object-cover rounded-lg shadow-md"
+        />
       </div>
       <div class="flex-1">
         <div
@@ -60,11 +76,13 @@ const currency_symbol = "$";
         >
           <div>
             <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">
-              {{ vendorDetails?.shopName }}
+              {{ vendorDetails?.shops?.[0]?.shopName }}
             </h2>
+
             <p class="text-gray-600 mb-2">
               Managed by {{ vendorDetails?.vendorName }}
             </p>
+
             <div class="flex flex-wrap items-center gap-3">
               <span
                 class="inline-flex items-center gap-2 bg-blue-50 text-blue-600 rounded-full px-3 py-1 text-sm font-medium"

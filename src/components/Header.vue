@@ -113,7 +113,7 @@ onUnmounted(() => {
               </div>
               <div v-if="authStore?.vendor" class="flex items-center space-x-2">
                 <span class="hidden md:block text-gray-600">{{
-                  authStore?.vendor?.shopName
+                  authStore?.vendor?.shop?.[0]?.shopName
                 }}</span>
                 <Icon
                   name="ph:caret-down"
