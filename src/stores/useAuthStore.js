@@ -47,7 +47,7 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       const loginResponse = await sendRequest({
         method: "POST",
-        url: "/login",
+        url: "/vendor/login",
         data: credentials,
       });
 
@@ -82,7 +82,7 @@ export const useAuthStore = defineStore("auth", () => {
 
       const signupResponse = await sendRequest({
         method: "POST",
-        url: "/register",
+        url: "/vendor/register",
         data: formData,
         headers: { "Content-Type": "multipart/form-data" },
       });

@@ -63,10 +63,11 @@ const addProduct = () => {
     price: parseFloat(newProduct.value.price),
     stock: parseInt(newProduct.value.stock),
     status: "Published",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60",
+    image:
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60",
     sales: 0,
   });
-  
+
   // Reset form
   newProduct.value = {
     name: "",
@@ -76,107 +77,20 @@ const addProduct = () => {
     category: "",
   };
 };
-
 </script>
 
 <template>
   <div>
     <div class="flex justify-between items-center">
       <h2 class="text-2xl font-bold text-gray-900">Product Management</h2>
-      <button
-        class="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg"
-      >
-        <Icon name="ph:plus" />
-        Add Product
-      </button>
-    </div>
-
-    <!-- Add Product Form -->
-    <div class="bg-white rounded-xl shadow-sm p-6">
-      <h3 class="text-lg font-semibold mb-4">Add New Product</h3>
-      <form @submit.prevent="addProduct" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Product Name</label
-            >
-            <input
-              v-model="newProduct.name"
-              type="text"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              placeholder="Enter product name"
-              required
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Price</label
-            >
-            <input
-              v-model="newProduct.price"
-              type="number"
-              step="0.01"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              placeholder="Enter price"
-              required
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Stock Quantity</label
-            >
-            <input
-              v-model="newProduct.stock"
-              type="number"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              placeholder="Enter stock quantity"
-              required
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Category</label
-            >
-            <select
-              v-model="newProduct.category"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              required
-            >
-              <option value="">Select category</option>
-              <option value="electronics">Electronics</option>
-              <option value="clothing">Clothing</option>
-              <option value="home">Home & Kitchen</option>
-              <option value="sports">Sports & Outdoors</option>
-            </select>
-          </div>
-          <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Description</label
-            >
-            <textarea
-              v-model="newProduct.description"
-              rows="3"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              placeholder="Enter product description"
-              required
-            ></textarea>
-          </div>
-        </div>
-        <div class="flex justify-end gap-3 pt-4">
-          <button
-            type="reset"
-            class="px-4 py-2 border border-gray-300 rounded-lg"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            class="px-4 py-2 bg-primary text-white rounded-lg"
-          >
-            Add Product
-          </button>
-        </div>
-      </form>
+      <router-link to="/dashboard/create-product">
+        <button
+          class="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg"
+        >
+          <Icon name="ph:plus" />
+          Add Product
+        </button>
+      </router-link>
     </div>
 
     <!-- Products List -->

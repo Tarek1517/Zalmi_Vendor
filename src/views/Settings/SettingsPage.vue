@@ -76,7 +76,6 @@ const form = ref({
 
 const profileImg = ref(null);
 const coverImg = ref(null);
-
 const fetchVendor = async () => {
   try {
     const response = await sendRequest({
@@ -233,7 +232,7 @@ onUnmounted(() => {
         <h3 class="font-semibold text-gray-900">Profile Information</h3>
         <p class="text-sm text-gray-500">Update your Profile details</p>
       </div>
-
+     
       <div class="p-5 space-y-5">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div class="space-y-1">

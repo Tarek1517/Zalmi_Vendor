@@ -101,27 +101,39 @@ onUnmounted(() => {
           </button>
 
           <div class="relative" ref="dropdownRef">
-            <button
-              ref="buttonRef"
-              @click="toggleDropdown"
-              class="flex items-center space-x-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 p-2 hover:bg-gray-100 rounded-lg"
-            >
+            <div v-if="authStore?.vendor">
+              <button
+                ref="buttonRef"
+                @click="toggleDropdown"
+                class="flex items-center space-x-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200 p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <div
+                  class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-sm"
+                >
+                  <span class="text-white font-semibold text-sm">A</span>
+                </div>
+                <div
+                  v-if="authStore?.vendor"
+                  class="flex items-center space-x-2"
+                >
+                  <span class="hidden md:block text-gray-600">{{
+                    authStore?.vendor?.shop?.[0]?.shopName
+                  }}</span>
+                  <Icon
+                    name="ph:caret-down"
+                    class="text-lg text-gray-400 transition-transform duration-200"
+                    :class="{ 'rotate-180': isDropdownOpen }"
+                  />
+                </div>
+              </button>
+            </div>
+            <div v-else>
               <div
                 class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-sm"
               >
-                <span class="text-white font-semibold text-sm">A</span>
+                <span class="text-white font-semibold text-sm">V</span>
               </div>
-              <div v-if="authStore?.vendor" class="flex items-center space-x-2">
-                <span class="hidden md:block text-gray-600">{{
-                  authStore?.vendor?.shop?.[0]?.shopName
-                }}</span>
-                <Icon
-                  name="ph:caret-down"
-                  class="text-lg text-gray-400 transition-transform duration-200"
-                  :class="{ 'rotate-180': isDropdownOpen }"
-                />
-              </div>
-            </button>
+            </div>
 
             <!-- Dropdown Menu -->
             <div
@@ -131,7 +143,7 @@ onUnmounted(() => {
               <!-- User Info -->
               <div class="px-4 py-3 border-b border-gray-100">
                 <p class="text-sm font-semibold text-gray-900">
-                  {{ authStore?.vendor?.shopName }}
+                  {{ authStore?.vendor?.shop?.[0]?.shopName }}
                 </p>
                 <p class="text-xs text-gray-500 mt-1">
                   {{ authStore?.vendor?.email }}
@@ -140,6 +152,14 @@ onUnmounted(() => {
 
               <!-- Menu Items -->
               <div class="py-2">
+                <RouterLink v-if="authStore?.vendor" to="/dashboard">
+                  <div
+                    class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
+                  >
+                    <Icon name="material-symbols:dashboard-outline-rounded" class="text-lg mr-3" />
+                    Dashboard
+                  </div>
+                </RouterLink>
                 <a
                   href="#"
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
@@ -154,28 +174,22 @@ onUnmounted(() => {
                   <Icon name="ph:gear" class="text-lg mr-3" />
                   Settings
                 </a>
-                <a
-                  href="#"
-                  class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
-                >
-                  <Icon name="ph:question" class="text-lg mr-3" />
-                  Support
-                </a>
+
+                <div class="border-t border-gray-100">
+                  <button
+                    @click="handleLogout"
+                    class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150 group"
+                  >
+                    <Icon
+                      name="line-md:log-out"
+                      class="text-lg mr-3 group-hover:scale-110 transition-transform duration-150"
+                    />
+                    Log out
+                  </button>
+                </div>
               </div>
 
               <!-- Logout Button -->
-              <div class="border-t border-gray-100 pt-2">
-                <button
-                  @click="handleLogout"
-                  class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150 group"
-                >
-                  <Icon
-                    name="line-md:log-out"
-                    class="text-lg mr-3 group-hover:scale-110 transition-transform duration-150"
-                  />
-                  Log out
-                </button>
-              </div>
             </div>
           </div>
         </div>
