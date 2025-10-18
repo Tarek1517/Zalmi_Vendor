@@ -42,6 +42,7 @@ const form = ref({
 });
 
 const parentCategories = ref([]);
+const brands = ref(null);
 
 const getParentCategories = async () => {
   try {
@@ -71,6 +72,19 @@ const flattenCategories = (categories, level = 0) => {
     }
   }
   return result;
+};
+
+const getBrands = async () => {
+  try {
+    const res = await sendRequest({
+      method: "get",
+      url: "/v1/brand", // this should return nested categories
+    });
+
+    brands.value = res?.data?.data || [];
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 // Image handling
@@ -150,6 +164,7 @@ const onSubmit = async () => {
 
 onMounted(() => {
   getParentCategories();
+  getBrands();
 });
 </script>
 
@@ -310,12 +325,23 @@ onMounted(() => {
                     Brand
                   </label>
                   <div class="relative">
-                    <input
-                      type="text"
+                    <select
                       v-model="form.brand_id"
-                      class="w-full px-4 py-3.5 pl-10 border border-primary/25 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder-gray-400"
-                      placeholder="Brand name"
-                    />
+                      class="w-full px-4 py-3.5 pl-10 border border-primary/25 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder-gray-400 appearance-none"
+                    >
+                      <!-- Nullable option -->
+                      <option :value="null">Select Brand (optional)</option>
+
+                      <!-- Dynamic options -->
+                      <option
+                        v-for="brand in brands"
+                        :key="brand.id"
+                        :value="brand.id"
+                      >
+                        {{ brand.name }}
+                      </option>
+                    </select>
+
                     <div class="absolute left-3 top-3.5 text-gray-400">
                       <Icon
                         name="heroicons:building-storefront"
@@ -406,18 +432,18 @@ onMounted(() => {
 
           <!-- Description & Specification -->
           <div
-            class="bg-white rounded-xl shadow-sm border border-blue-200 overflow-hidden"
+            class="bg-white rounded-xl shadow-sm border border-primary/25 overflow-hidden"
           >
             <div
-              class="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-100 to-white"
+              class="p-6 border-b border-primary/25 bg-gradient-to-r from-primary/15 to-white"
             >
               <div class="flex items-center">
                 <div
-                  class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mr-4"
+                  class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center mr-4"
                 >
                   <Icon
                     name="heroicons:document-text"
-                    class="w-5 h-5 text-blue-500"
+                    class="w-5 h-5 text-primary"
                   />
                 </div>
                 <div>
@@ -525,10 +551,7 @@ onMounted(() => {
               class="p-5 border-b border-primary/25 bg-gradient-to-r from-primary/15 to-white"
             >
               <h2 class="text-lg font-semibold text-gray-900 flex items-center">
-                <Icon
-                  name="heroicons:cube"
-                  class="w-5 h-5 mr-2 text-primary"
-                />
+                <Icon name="heroicons:cube" class="w-5 h-5 mr-2 text-primary" />
                 Inventory
               </h2>
             </div>
@@ -604,7 +627,7 @@ onMounted(() => {
             <div
               class="p-5 border-b border-primary/25 bg-gradient-to-r from-primary/15 to-white"
             >
-              <h2 class="text-lg font-semibold text-primary flex items-center">
+              <h2 class="text-lg font-semibold text-gray-900 flex items-center">
                 <Icon
                   name="heroicons:photo"
                   class="w-5 h-5 mr-2 text-primary"
@@ -636,7 +659,7 @@ onMounted(() => {
                     <div v-if="!coverImg" class="py-6">
                       <Icon
                         name="heroicons:photo"
-                        class="w-10 h-10 text-gray-400 mx-auto mb-3"
+                        class="w-10 h-10 text-primary mx-auto mb-3"
                       />
                       <p class="text-sm text-gray-600 mb-1">
                         Upload cover image
@@ -680,7 +703,7 @@ onMounted(() => {
                     <div class="text-center py-4">
                       <Icon
                         name="heroicons:cloud-arrow-up"
-                        class="w-8 h-8 text-gray-400 mx-auto mb-2"
+                        class="w-8 h-8 text-primary mx-auto mb-2"
                       />
                       <p class="text-sm text-gray-600 mb-1">
                         Click to upload multiple images
@@ -724,22 +747,18 @@ onMounted(() => {
       <div
         class="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky bottom-4 z-10"
       >
-        
-          <div class="flex items-center justify-end gap-4">
-            <button
-              @click="onSubmit"
-              class="px-8 py-3.5 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all duration-200 font-medium flex items-center gap-2 shadow-md hover:shadow-primary/20"
-            >
-              <Icon name="heroicons:check" class="w-5 h-5" />
-              Save Product
-            </button>
-          </div>
-        
+        <div class="flex items-center justify-end gap-4">
+          <button
+            @click="onSubmit"
+            class="px-8 py-3.5 bg-gradient-to-r from-primary to-secondary cursor-pointer text-white rounded-xl hover:shadow-lg transition-all duration-200 font-medium flex items-center gap-2 shadow-md hover:shadow-primary/20"
+          >
+            <Icon name="heroicons:check" class="w-5 h-5" />
+            Save Product
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

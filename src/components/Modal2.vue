@@ -34,8 +34,8 @@ onBeforeUnmount(() => {
       <transition name="scale-up">
         <div
           v-if="isOpen"
-          class="relative w-full max-w-5xl h-[700px] rounded-xl bg-gradient-to-br from-white to-gray-50/95 shadow-2xl border border-white/60 overflow-hidden"
-          
+          class="relative w-full max-w-3xl rounded-xl bg-gradient-to-br from-white to-gray-50/95 shadow-2xl border border-white/60 overflow-hidden"
+          style="max-height: 85vh"
         >
           <!-- Glassmorphism effect overlay -->
           <div
@@ -62,7 +62,7 @@ onBeforeUnmount(() => {
           </div>
 
           <!-- Body -->
-          <div class="p-6 text-gray-700 overflow-auto h-[600px]">
+          <div class="p-6 text-gray-700 overflow-auto" style="max-height: 65vh">
             <slot></slot>
           </div>
         </div>
