@@ -14,28 +14,21 @@ export const useAuthStore = defineStore("auth", () => {
   // 🔹 Fetch User
   // ===============================
   async function fetchUser() {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (!storedUser?.token) return; // Exit if no token
+    const token = getToken();
+    if (!token) return; // skip fetching if no token
 
     try {
-      const response = await sendRequest({
+      const response = await protectedRequest({
         method: "GET",
         url: "/vendor/user",
-        headers: {
-          Authorization: `Bearer ${storedUser.token}`,
-        },
       });
 
       if (response?.data) {
         vendor.value = response.data;
       }
     } catch (err) {
-      console.error("Fetch user error:", err);
-      // Only clear storage if 401 (unauthorized)
       if (err.response?.status === 401) {
-        await clearLocalStorage();
-        vendor.value = null;
-        router.push({ name: "Login" });
+        await logout();
       }
     }
   }
@@ -52,18 +45,21 @@ export const useAuthStore = defineStore("auth", () => {
       });
 
       if (loginResponse?.data) {
-        await setLocalStorage(loginResponse.data);
-        vendor.value = loginResponse.data;
+        const data = loginResponse.data.vendor
+          ? loginResponse.data
+          : { vendor: loginResponse.data, token: loginResponse.data.token };
+        await setLocalStorage(data);
+        vendor.value = data.vendor ?? data;
         return loginResponse;
       }
     } catch (err) {
       console.error("Login error:", err);
-      throw err; // Rethrow so component can handle
+      throw err;
     }
   }
 
   // ===============================
-  // 🔹 Register (multipart/form-data)
+  // 🔹 Register
   // ===============================
   async function register(signupData) {
     try {
@@ -88,8 +84,11 @@ export const useAuthStore = defineStore("auth", () => {
       });
 
       if (signupResponse?.data) {
-        await setLocalStorage(signupResponse.data);
-        vendor.value = signupResponse.data;
+        const data = signupResponse.data.vendor
+          ? signupResponse.data
+          : { vendor: signupResponse.data, token: signupResponse.data.token };
+        await setLocalStorage(data);
+        vendor.value = data.vendor ?? data;
         return signupResponse;
       }
     } catch (err) {
@@ -105,8 +104,7 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       await sendRequest({
         url: "/logout",
-        method: "GET",
-        headers: { Authorization: `Bearer ${getToken()}` },
+        method: "POST",
       });
     } catch (err) {
       console.warn("Logout request failed — proceeding to clear session.");
@@ -133,7 +131,7 @@ export const useAuthStore = defineStore("auth", () => {
   }
 
   // ===============================
-  // 🔹 Expose to components
+  // 🔹 Expose
   // ===============================
   return {
     vendor,

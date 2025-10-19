@@ -20,6 +20,7 @@ const form = ref({
   price: null,
   cost_price: null,
   vendor_id: authStore?.vendor?.id,
+  shop_id: authStore?.vendor?.shop?.[0]?.id ?? null,
   category_id: null,
   brand_id: 3,
   discount_price: 0,
@@ -198,6 +199,7 @@ onMounted(() => {
         <!-- Main Form -->
         <div class="lg:col-span-2 space-y-8">
           <!-- Basic Information Card -->
+       
           <div
             class="bg-white rounded-xl shadow-sm border border-primary/25 overflow-hidden"
           >

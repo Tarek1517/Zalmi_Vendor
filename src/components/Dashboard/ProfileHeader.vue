@@ -11,16 +11,15 @@ const fetchVendor = async () => {
   try {
     const response = await sendRequest({
       method: "get",
-      url: `/v1/vendor/${authStore?.vendor?.id}`,
+      url: "/vendor/user",
     });
 
-    const data = response?.data?.data;
+    const data = response?.data;
     if (!data) return;
 
-    // Normalize URLs
     vendorDetails.value = {
       ...data,
-      shops: data.shops?.map((shop) => ({
+      shops: data.shop?.map((shop) => ({
         ...shop,
         image_url: shop.image_url?.replace(/\\/g, "/"),
         cvrimage_url: shop.cvrimage_url?.replace(/\\/g, "/"),
@@ -70,6 +69,7 @@ const currency_symbol = "$";
           class="w-full h-full object-cover rounded-lg shadow-md"
         />
       </div>
+
       <div class="flex-1">
         <div
           class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
