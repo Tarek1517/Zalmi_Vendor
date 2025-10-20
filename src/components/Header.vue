@@ -101,7 +101,7 @@ onUnmounted(() => {
           </button>
 
           <div class="relative" ref="dropdownRef">
-            <div v-if="authStore?.vendor">
+            <div v-if="authStore?.vendor?.vendor">
               <button
                 ref="buttonRef"
                 @click="toggleDropdown"
@@ -110,14 +110,14 @@ onUnmounted(() => {
                 <div
                   class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-sm"
                 >
-                  <span class="text-white font-semibold text-sm">A</span>
+                  <span class="text-white font-semibold text-sm">V</span>
                 </div>
                 <div
                   v-if="authStore?.vendor"
                   class="flex items-center space-x-2"
                 >
                   <span class="hidden md:block text-gray-600">{{
-                    authStore?.vendor?.shop?.[0]?.shopName
+                    authStore?.vendor?.vendor?.shop?.[0]?.shopName
                   }}</span>
                   <Icon
                     name="ph:caret-down"
@@ -127,14 +127,8 @@ onUnmounted(() => {
                 </div>
               </button>
             </div>
-            <div v-else>
-              <div
-                class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-sm"
-              >
-                <span class="text-white font-semibold text-sm">V</span>
-              </div>
-            </div>
 
+            
             <!-- Dropdown Menu -->
             <div
               v-if="isDropdownOpen"
@@ -156,7 +150,10 @@ onUnmounted(() => {
                   <div
                     class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
                   >
-                    <Icon name="material-symbols:dashboard-outline-rounded" class="text-lg mr-3" />
+                    <Icon
+                      name="material-symbols:dashboard-outline-rounded"
+                      class="text-lg mr-3"
+                    />
                     Dashboard
                   </div>
                 </RouterLink>

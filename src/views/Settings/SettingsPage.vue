@@ -80,7 +80,7 @@ const fetchVendor = async () => {
   try {
     const response = await sendRequest({
       method: "get",
-      url: `/v1/vendor/${authStore?.vendor?.id}`,
+      url: `/v1/vendor/${authStore?.vendor?.vendor?.id}`,
     });
 
     const data = response.data?.data;
@@ -169,7 +169,7 @@ const onSubmit = async () => {
 
     const response = await sendRequest({
       method: "post",
-      url: `/v1/vendor/${authStore?.vendor?.id}`,
+      url: `/v1/vendor/${authStore?.vendor?.vendor?.id}`,
       params: { _method: "PUT" },
       data: formData,
       headers: { "Content-Type": "multipart/form-data" },
@@ -232,7 +232,7 @@ onUnmounted(() => {
         <h3 class="font-semibold text-gray-900">Profile Information</h3>
         <p class="text-sm text-gray-500">Update your Profile details</p>
       </div>
-     
+
       <div class="p-5 space-y-5">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div class="space-y-1">
@@ -467,7 +467,7 @@ onUnmounted(() => {
       </div>
 
       <div class="p-5 space-y-5">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="grid grid-cols-1 gap-5">
           <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700"
               >Store Name</label
@@ -475,17 +475,6 @@ onUnmounted(() => {
             <input
               type="text"
               v-model="form.shopName"
-              class="block w-full px-4 py-2.5 rounded-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
-            />
-          </div>
-
-          <div class="space-y-1">
-            <label class="block text-sm font-medium text-gray-700"
-              >Order Number</label
-            >
-            <input
-              type="number"
-              v-model="form.order_number"
               class="block w-full px-4 py-2.5 rounded-lg border border-primary/25 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none"
             />
           </div>

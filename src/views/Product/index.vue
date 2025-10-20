@@ -4,6 +4,8 @@ import useAxios from "@/composables/useAxios";
 import Modal2 from "@/components/Modal2.vue";
 import SummernoteEditor from "vue3-summernote-editor";
 import { toast } from "vue3-toastify";
+import { useAuthStore } from "@/stores/useAuthStore.js";
+const authStore = useAuthStore();
 const { loading, error, sendRequest } = useAxios();
 // const products = ref(null);
 const extractPage = (url) => {
@@ -78,9 +80,21 @@ watch(search, (newValue) => {
   <div>
     <div class="flex justify-between items-center">
       <h2 class="text-2xl font-bold text-gray-900">Product Management</h2>
-      <router-link to="/dashboard/create-product">
+      <router-link
+        :to="
+          authStore?.vendor?.vendor?.shop?.length
+            ? '/dashboard/create-product'
+            : ''
+        "
+      >
         <button
-          class="flex items-center gap-2 px-4 py-2 cursor-pointer bg-primary hover:bg-primary/90 text-white rounded-lg"
+          :class="[
+            'flex items-center gap-2 px-4 py-2 rounded-lg text-white',
+            authStore?.vendor?.vendor?.shop?.length
+              ? 'bg-primary hover:bg-primary/90 cursor-pointer'
+              : 'bg-gray-300 cursor-not-allowed',
+          ]"
+          :disabled="!authStore?.vendor?.vendor?.shop?.length"
         >
           <Icon name="ph:plus" />
           Add Product

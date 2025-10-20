@@ -18,13 +18,21 @@ export const useAuthStore = defineStore("auth", () => {
     if (!token) return; // skip fetching if no token
 
     try {
-      const response = await protectedRequest({
+      const response = await sendRequest({
         method: "GET",
         url: "/vendor/user",
       });
 
       if (response?.data) {
-        vendor.value = response.data;
+        // Fix: Preserve the existing structure from localStorage
+        const currentData = JSON.parse(localStorage.getItem("user")) || {};
+        const updatedData = {
+          ...currentData,
+          vendor: response.data,
+        };
+
+        vendor.value = updatedData;
+        localStorage.setItem("user", JSON.stringify(updatedData));
       }
     } catch (err) {
       if (err.response?.status === 401) {
@@ -49,7 +57,7 @@ export const useAuthStore = defineStore("auth", () => {
           ? loginResponse.data
           : { vendor: loginResponse.data, token: loginResponse.data.token };
         await setLocalStorage(data);
-        vendor.value = data.vendor ?? data;
+        vendor.value = data;
         return loginResponse;
       }
     } catch (err) {
@@ -88,7 +96,7 @@ export const useAuthStore = defineStore("auth", () => {
           ? signupResponse.data
           : { vendor: signupResponse.data, token: signupResponse.data.token };
         await setLocalStorage(data);
-        vendor.value = data.vendor ?? data;
+        vendor.value = data;
         return signupResponse;
       }
     } catch (err) {
