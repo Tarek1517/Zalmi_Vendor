@@ -19,8 +19,8 @@ const form = ref({
   title: null,
   price: null,
   cost_price: null,
-  vendor_id: authStore?.vendor?.id,
-  shop_id: authStore?.vendor?.shop?.[0]?.id ?? null,
+  vendor_id: authStore?.vendor?.vendor?.id,
+  shop_id: authStore?.vendor?.vendor?.shop?.[0]?.id ?? null,
   category_id: null,
   brand_id: 3,
   discount_price: 0,
@@ -49,7 +49,7 @@ const getParentCategories = async () => {
   try {
     const res = await sendRequest({
       method: "get",
-      url: "/v1/parent/category", // this should return nested categories
+      url: "/v1/parent/categories", // this should return nested categories
     });
 
     const allCats = res?.data?.data || [];
@@ -79,7 +79,7 @@ const getBrands = async () => {
   try {
     const res = await sendRequest({
       method: "get",
-      url: "/v1/brand", // this should return nested categories
+      url: "/v1/brands", // this should return nested categories
     });
 
     brands.value = res?.data?.data || [];
@@ -194,12 +194,11 @@ onMounted(() => {
           </div>
         </div>
       </div>
-
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Main Form -->
         <div class="lg:col-span-2 space-y-8">
           <!-- Basic Information Card -->
-       
+
           <div
             class="bg-white rounded-xl shadow-sm border border-primary/25 overflow-hidden"
           >

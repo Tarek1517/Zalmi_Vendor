@@ -28,7 +28,7 @@ const getParentCategories = async () => {
   try {
     const res = await sendRequest({
       method: "get",
-      url: "/v1/parent/category",
+      url: "/v1/parent/categories",
     });
     const allCats = res?.data?.data || [];
     parentCategories.value = flattenCategories(allCats);
@@ -53,7 +53,7 @@ const form = ref({
   title: null,
   price: 0,
   cost_price: 0,
-  vendor_id: authStore?.vendor?.id || null,
+  vendor_id: authStore?.vendor?.vendor?.id || null,
   category_id: null,
   brand_id: null,
   discount_price: 0,
@@ -128,7 +128,7 @@ const getBrands = async () => {
   try {
     const res = await sendRequest({
       method: "get",
-      url: "/v1/brand", // this should return nested categories
+      url: "/v1/brands", // this should return nested categories
     });
 
     brands.value = res?.data?.data || [];
