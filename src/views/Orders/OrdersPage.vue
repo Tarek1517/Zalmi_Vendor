@@ -1,53 +1,49 @@
 <script setup>
-import { ref } from "vue";
-// Recent orders
-const recentOrders = ref([
-  {
-    id: 1,
-    order_code: "ORD-2023-1056",
-    customer: "Sarah Johnson",
-    date: "2023-10-15",
-    status: "Delivered",
-    amount: 249.99,
-    items: 2,
-  },
-  {
-    id: 2,
-    order_code: "ORD-2023-1055",
-    customer: "Mike Chen",
-    date: "2023-10-14",
-    status: "Shipped",
-    amount: 149.99,
-    items: 1,
-  },
-  {
-    id: 3,
-    order_code: "ORD-2023-1054",
-    customer: "Emma Wilson",
-    date: "2023-10-14",
-    status: "Processing",
-    amount: 399.99,
-    items: 3,
-  },
-  {
-    id: 4,
-    order_code: "ORD-2023-1053",
-    customer: "David Kim",
-    date: "2023-10-13",
-    status: "Pending",
-    amount: 99.99,
-    items: 1,
-  },
-]);
+import { ref, onMounted, watch } from "vue";
+import useAxios from "@/composables/useAxios";
 
-// Update order status
-const updateOrderStatus = (orderId, newStatus) => {
-  const order = recentOrders.value.find(o => o.id === orderId);
-  if (order) {
-    order.status = newStatus;
+import { useAuthStore } from "@/stores/useAuthStore.js";
+const authStore = useAuthStore();
+const { loading, error, sendRequest } = useAxios();
+// const products = ref(null);
+const extractPage = (url) => {
+  if (!url) return 1;
+
+  const match = url.match(/page=(\d+)/);
+  return match ? parseInt(match[1]) : 1;
+};
+const orders = ref(null);
+const search = ref("");
+
+const getOrders = async (query = "", page = 1) => {
+  const response = await sendRequest({
+    method: "get",
+    url: `/v1/order?search=${query}&page=${page}`,
+  });
+  if (response) {
+    orders.value = response?.data;
   }
 };
 
+
+const updateOrderStatus = async (orderId, newStatus) => {
+  const response = await sendRequest({
+    method: "post",
+    url: `/v1/order/${orderId}`,
+    data: {
+      order_status: newStatus,
+      _method: "PUT",
+    },
+  });
+  if (response) {
+    getOrders();
+  }
+
+}
+
+onMounted(() => {
+  getOrders();
+})
 </script>
 
 <template>
@@ -59,7 +55,7 @@ const updateOrderStatus = (orderId, newStatus) => {
         class="p-5 border-b border-gray-100 flex justify-between items-center"
       >
         <h3 class="font-semibold text-gray-900">
-          All Orders ({{ recentOrders.length }})
+          All Orders ({{ orders?.length}})
         </h3>
         <div class="flex items-center gap-2">
           <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
@@ -67,7 +63,6 @@ const updateOrderStatus = (orderId, newStatus) => {
             <option>Pending</option>
             <option>Processing</option>
             <option>Shipped</option>
-            <option>Delivered</option>
           </select>
           <input
             type="text"
@@ -84,11 +79,6 @@ const updateOrderStatus = (orderId, newStatus) => {
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Order ID
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Customer
               </th>
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -113,38 +103,42 @@ const updateOrderStatus = (orderId, newStatus) => {
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="order in recentOrders" :key="order.id">
+
+            <tr v-for="order in orders" :key="order?.id">
               <td
                 class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
               >
-                {{ order.order_code }}
+                {{ order?.order_code }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ order.customer }}
-              </td>
+
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ order.date }}
+                {{ order?.created_at }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ currency_symbol }}{{ order.amount.toFixed(2) }}
+                {{ currency_symbol }}{{ order?.sub_total }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ currency_symbol }}{{ order?.shipping_charge }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ currency_symbol }}{{ order?.grand_total }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <select
-                  :value="order.status"
+                  :value="order?.order_status"
                   @change="updateOrderStatus(order.id, $event.target.value)"
                   class="rounded-full text-xs font-medium px-2.5 py-0.5 border-0 focus:ring-2 focus:ring-primary/50"
                   :class="{
-                    'bg-gray-100 text-gray-800': order.status === 'Pending',
+                    'bg-gray-100 text-gray-800': order?.order_status === 'pending',
                     'bg-yellow-100 text-yellow-800':
-                      order.status === 'Processing',
-                    'bg-blue-100 text-blue-800': order.status === 'Shipped',
-                    'bg-green-100 text-green-800': order.status === 'Delivered',
+                      order?.order_status === 'process',
+                    'bg-blue-100 text-blue-800': order?.order_status === 'shipped',
+                    'bg-green-100 text-green-800': order?.order_status === 'delivered',
                   }"
                 >
-                  <option value="Pending">Pending</option>
-                  <option value="Processing">Processing</option>
-                  <option value="Shipped">Shipped</option>
-                  <option value="Delivered">Delivered</option>
+                  <option value="pending">Pending</option>
+                  <option value="process">Processing</option>
+                  <option value="shipped">Shipped</option>
                 </select>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
